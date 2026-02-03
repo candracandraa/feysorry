@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="shortcut icon" type="image/x-icon" href="logoUkril.ico" />
+  <title>For You</title>
+
+  <!-- Bootstrap 3 -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+  <style>
+    :root { --pad: 16px; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: #000;
+      color: #fff;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 12px;
+      padding: 24px 16px calc(24px + env(safe-area-inset-bottom, 0));
+    }
+
+    .title { font-size: clamp(20px, 4.5vw, 36px); margin: 0; }
+    .subtitle { font-size: clamp(18px, 4vw, 28px); margin: 6px 0 0 0; }
+
+    .hero {
+      width: min(520px, 85vw);
+      height: auto;
+      display: block;
+      margin: 8px auto 0;
+      border-radius: 8px;
+    }
+
+    .buttons {
+      position: relative;
+      width: min(520px, 92vw);
+      height: clamp(220px, 42vh, 380px);
+      margin-top: 8px;
+      border-radius: 14px;
+      border: 1px dashed rgba(255,255,255,.15);
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .button {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 14px 24px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: clamp(16px, 4vw, 20px);
+      cursor: pointer;
+      border-radius: 10px;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 6px 18px rgba(0,0,0,.35);
+    }
+    .button1 { background-color: #f44336; }
+    .button2 { background-color: #4CAF50; }
+
+    #btnYes { position: absolute; left: 10px; bottom: 10px; z-index: 1; }
+    #Bn { position: absolute; left: 16px; top: 16px; transition: left 220ms ease, top 220ms ease; z-index: 2; }
+
+    footer {
+      width: 100%;
+      text-align: center;
+      font-size: 14px;
+      padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0));
+    }
+
+    .modal-content { position: relative; overflow: hidden; }
+    .confetti-canvas {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 5;
+    }
+
+    @media (max-width: 576px) {
+      .modal-dialog { width: auto; margin: 10px; }
+      .modal-body img { max-width: 100%; height: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="main" role="main">
+    <h1 class="title">Kamu masih marah ya?</h1>
+
+    <img class="hero" alt="Ngambek" src="gif.gif" onerror="this.onerror=null; this.src='https://i.pinimg.com/originals/73/e3/33/73e33308d28b8a1817e21559a1cce818.gif';" />
+
+    <h2 class="subtitle">Maafin aku yaa...</h2>
+
+    <section class="buttons" aria-label="Area tombol">
+      <button id="btnYes" class="button button2" type="button" onclick="return show_modal();">IYA</button>
+      <button id="Bn" class="button button1" type="button">GA</button>
+    </section>
+  </main>
+
+  <footer>
+    : <span id="visitCount"></span>
+  </footer>
+
+  <!-- Modal -->
+  <div class="modal fade" id="myModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content" style="color:#333">
+        <canvas id="confettiModal" class="confetti-canvas"></canvas>
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">&times;</button>
+          <h3 class="modal-title" id="modalTitle">Makasih ya sayangg udah mau maafin aku....</h3>
+        </div>
+        <div class="modal-body">
+          <img id="image_modal" src="gif3.gif" alt="Pelukan" style="max-width: 100%; height: auto;" onerror="this.onerror=null; this.src='https://i.pinimg.com/originals/b6/52/38/b652386831be82932d18d56f3f1abdbe.gif';" />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio -->
+  <audio id="bgm" autoplay playsinline preload="auto">
+    <source src="audio/romance.ogg" type="audio/ogg">
+    <source src="bgm.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="errorSfx" preload="auto">
+    <source src="bgm.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- JS libs -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    // ====== Visit Counter ======
+    (function() {
+      var count = localStorage.getItem('visitCount') || 0;
+      count = parseInt(count) + 1;
+      localStorage.setItem('visitCount', count);
+      document.getElementById('visitCount').textContent = count;
+    })();
+
+    // ====== CONFETTI di modal ======
+    var modalConfetti;
+    function burstConfettiInModal() {
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      var canvas = document.getElementById('confettiModal');
+      if (!modalConfetti) modalConfetti = confetti.create(canvas, { resize: true, useWorker: true });
+
+      var duration = 900, end = Date.now() + duration;
+      (function frame() {
+        modalConfetti({ particleCount: 5, startVelocity: 32, spread: 70, origin: { x: 0.1, y: 0.2 } });
+        modalConfetti({ particleCount: 5, startVelocity: 32, spread: 70, origin: { x: 0.9, y: 0.2 } });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      })();
+      modalConfetti({ particleCount: 120, spread: 80, gravity: 0.9, origin: { x: 0.5, y: 0.2 } });
+    }
+
+    // ====== Modal + BGM ======
+    function show_modal() {
+      var a = document.getElementById('bgm');
+      if (a) { a.play && a.play().catch(function(){}); }
+      $('#myModal').modal('show');
+      return false;
+    }
+
+    // Aksesibilitas: inert-kan main saat modal tampil
+    (function () {
+      var $modal = $('#myModal');
+      var modalEl = $modal.get(0);
+      var main = document.querySelector('main');
+
+      $modal.on('shown.bs.modal', function () {
+        modalEl && modalEl.focus && modalEl.focus();
+        if (main) {
+          if ('inert' in HTMLElement.prototype) main.setAttribute('inert', '');
+          else main.setAttribute('aria-hidden', 'true');
+        }
+        setTimeout(burstConfettiInModal, 60);
+      });
+
+      $modal.on('hidden.bs.modal', function () {
+        if (main) {
+          main.removeAttribute('inert');
+          main.removeAttribute('aria-hidden');
+        }
+      });
+    })();
+
+    // ====== Tombol "GA" lari + suara error ======
+    (function () {
+      var wrap = document.querySelector('.buttons');
+      var bn = document.getElementById('Bn');
+      var err = document.getElementById('errorSfx');
+
+      var margin = 8, minMove = 64;
+      var last = { x: 16, y: 16 };
+
+      function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+      function safeBounds() {
+        var w = Math.max(wrap.clientWidth, 200);
+        var h = Math.max(wrap.clientHeight, 160);
+        var bw = Math.max(bn.offsetWidth, 80);
+        var bh = Math.max(bn.offsetHeight, 40);
+        return { maxLeft: Math.max(margin, w - bw - margin), maxTop: Math.max(margin, h - bh - margin) };
+      }
+
+      function moveBn() {
+        var b = safeBounds();
+        var nx, ny, tries = 0;
+        do {
+          nx = Math.random() * (b.maxLeft - margin) + margin;
+          ny = Math.random() * (b.maxTop  - margin) + margin;
+          tries++;
+          if (tries > 24) break;
+        } while (Math.hypot(nx - last.x, ny - last.y) < minMove);
+
+        last.x = clamp(nx, margin, b.maxLeft);
+        last.y = clamp(ny, margin, b.maxTop);
+        bn.style.left = last.x + 'px';
+        bn.style.top  = last.y + 'px';
+      }
+
+      function playError() {
+        if (err) { err.currentTime = 0; err.play && err.play().catch(function(){}); }
+        if (navigator.vibrate) navigator.vibrate(40);
+      }
+
+      bn.addEventListener('pointerdown', function(e) { e.preventDefault(); playError(); moveBn(); }, { passive: false });
+      bn.addEventListener('touchstart', function(e) { e.preventDefault(); playError(); moveBn(); }, { passive: false });
+      bn.addEventListener('mouseover', moveBn);
+
+      function centerInit() {
+        var b = safeBounds();
+        last.x = Math.floor(b.maxLeft / 2);
+        last.y = Math.floor(b.maxTop / 2);
+        bn.style.left = last.x + 'px';
+        bn.style.top  = last.y + 'px';
+      }
+
+      window.addEventListener('load', function(){ centerInit(); setTimeout(moveBn, 120); });
+      window.addEventListener('resize', centerInit);
+      window.addEventListener('orientationchange', function(){ setTimeout(centerInit, 120); });
+    })();
+  </script>
+</body>
+</html>
